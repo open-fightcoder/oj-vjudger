@@ -1,4 +1,4 @@
-package vjudge
+package vjudger
 
 import (
 	"fmt"
@@ -23,4 +23,5 @@ func TestHDUJudger_GetCEInfo(t *testing.T) {
 	h := HDUJudger{}
 	res, _ := h.GetCEInfo("23466507")
 	fmt.Println(res)
+
 }

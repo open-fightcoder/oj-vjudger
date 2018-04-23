@@ -1,2 +1,2 @@
-# oj-vjudger
-The VirtualJudge For FightCoder
+# gin-framework
+基于gin的API框架.

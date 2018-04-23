@@ -1,4 +1,4 @@
-package vjudge
+package vjudger
 
 import (
 	"bytes"

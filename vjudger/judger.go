@@ -1,4 +1,4 @@
-package vjudge
+package vjudger
 
 type Judger interface {
 	Submit(problemId, language, code string) string

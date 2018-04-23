@@ -116,6 +116,14 @@
 			"notests": true
 		},
 		{
+			"importpath": "github.com/golang/snappy",
+			"repository": "https://github.com/golang/snappy",
+			"vcs": "git",
+			"revision": "553a641470496b2327abcac10b36396bd98e45c9",
+			"branch": "master",
+			"notests": true
+		},
+		{
 			"importpath": "github.com/json-iterator/go",
 			"repository": "https://github.com/json-iterator/go",
 			"vcs": "git",
@@ -160,6 +168,14 @@
 			"repository": "https://github.com/mattn/go-sqlite3",
 			"vcs": "git",
 			"revision": "1024cb20b4711d09e33e5d3fd132ef88f998f809",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/nsqio/go-nsq",
+			"repository": "https://github.com/nsqio/go-nsq",
+			"vcs": "git",
+			"revision": "8c1ff52dff6fd3ecc19c418649bc643b18e862fc",
 			"branch": "master",
 			"notests": true
 		},

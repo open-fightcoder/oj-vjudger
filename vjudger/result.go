@@ -1,4 +1,4 @@
-package vjudge
+package vjudger
 
 const (
 	Normal              int = 0  //默认

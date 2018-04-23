@@ -31,7 +31,7 @@ func GetRandomUa() string {
 }
 
 func getUaFormFile() []string {
-	data, err := ioutil.ReadFile("./ua_pool.txt")
+	data, err := ioutil.ReadFile("../scripts/ua/ua_pool.txt")
 	if err != nil {
 		panic(err)
 	}

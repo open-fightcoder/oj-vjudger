@@ -1,13 +1,9 @@
-/**
- * Created by leeezm on 2018/4/18.
- * Email: shiyi@fightcoder.com
- */
-
 package models
 
 import (
-	"github.com/open-fightcoder/oj-vjudger/common"
 	"sync"
+
+	"github.com/open-fightcoder/oj-vjudger/common"
 )
 
 var once sync.Once

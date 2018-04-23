@@ -1,4 +1,4 @@
-package baseController
+package base
 
 type HttpResponse struct {
 	Code int         `json:"code"`
@@ -6,7 +6,7 @@ type HttpResponse struct {
 	Data interface{} `json:"data,omitempty"`
 }
 
-func (this *Base) Success(data ...interface{}) *HttpResponse {
+func Success(data ...interface{}) *HttpResponse {
 	resp := &HttpResponse{Code: 0}
 	if len(data) > 0 {
 		resp.Data = data[0]
@@ -14,7 +14,7 @@ func (this *Base) Success(data ...interface{}) *HttpResponse {
 	return resp
 }
 
-func (this *Base) Fail(msg ...string) *HttpResponse {
+func Fail(msg ...string) *HttpResponse {
 	resp := &HttpResponse{Code: 1}
 	if len(msg) > 0 {
 		resp.Msg = msg[0]
@@ -23,13 +23,13 @@ func (this *Base) Fail(msg ...string) *HttpResponse {
 }
 
 // old
-func (this *Base) MakeResponseSuccess(data ...interface{}) map[string]interface{} {
+func MakeResponseSuccess(data ...interface{}) map[string]interface{} {
 	if len(data) < 1 {
-		return this.MakeResponse("success", "")
+		return MakeResponse("success", "")
 	}
-	return this.MakeResponse("success", data[0])
+	return MakeResponse("success", data[0])
 }
 
-func (this *Base) MakeResponse(msg string, data interface{}) map[string]interface{} {
+func MakeResponse(msg string, data interface{}) map[string]interface{} {
 	return map[string]interface{}{"code": 0, "msg": msg, "data": data}
 }

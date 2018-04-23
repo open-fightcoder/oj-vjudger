@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-
 	"github.com/open-fightcoder/oj-vjudger/common/g"
 )
 
@@ -15,7 +14,7 @@ func CreateToken(userId int) (string, error) {
 	cfg := g.Conf()
 	claims := jwt.MapClaims{
 		"uid": userId,
-		"exp": time.Now().Add(time.Second * 24 * 60 * 60 * time.Duration(cfg.Jwt.MaxEffectiveTime)).Unix(),
+		"exp": time.Now().Add(time.Hour * 24 * time.Duration(cfg.Jwt.MaxEffectiveTime)).Unix(),
 	}
 
 	var signingMethod *jwt.SigningMethodHMAC
@@ -32,12 +31,7 @@ func CreateToken(userId int) (string, error) {
 
 	token := jwt.NewWithClaims(signingMethod, claims)
 
-	tokenStr, err := token.SignedString([]byte(mySigningKey))
-	if err != nil {
-		return "", err
-	}
-
-	return tokenStr, nil
+	return token.SignedString([]byte(mySigningKey))
 }
 
 func RequireTokenAuthentication(tokenStr string) (bool, string) {
@@ -45,7 +39,7 @@ func RequireTokenAuthentication(tokenStr string) (bool, string) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("error")
 		}
-		return mySigningKey, nil
+		return []byte(mySigningKey), nil
 	})
 	userId, _ := token.Claims.(jwt.MapClaims)["uid"].(string)
 	return token.Valid, userId

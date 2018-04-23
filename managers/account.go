@@ -7,45 +7,43 @@ import (
 
 	"github.com/open-fightcoder/oj-vjudger/common/components"
 	"github.com/open-fightcoder/oj-vjudger/models"
+	"github.com/pkg/errors"
 )
 
-func AccountLogin(email, password string) (bool, string, string) {
-	account := getAccountByEmail(email)
+func AccountLogin(email string, password string) (string, error) {
+	account, err := models.AccountGetByEmail(email)
+	if err != nil {
+		return "", fmt.Errorf("get account failure : %s ", err.Error())
+	}
 	if account == nil {
-		return false, "", "Email is not exist"
+		return "", errors.New("Email is not exist")
 	}
 	if account.Password != md5Encode(password) {
-		return false, "", "Password is wrong"
-	} else {
-		//TODO
-		userId := 1
-		if token, err := components.CreateToken(userId); err != nil {
-			panic(err.Error())
-		} else {
-			return true, token, ""
-		}
+		return "", errors.New("Password is wrong")
 	}
+
+	userId := 1
+	token, err := components.CreateToken(userId)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
 }
 
-func AccountRegister(email, password string) (bool, int64, string) {
-	account := getAccountByEmail(email)
+func AccountRegister(email, password string) (int64, error) {
+	account, err := models.AccountGetByEmail(email)
+	if err != nil {
+		return 0, fmt.Errorf("get account failure : %s ", err.Error())
+	}
 	if account != nil {
-		return false, 0, "Email is exist"
+		return 0, errors.New("Email is exist")
 	}
 	account = &models.Account{Email: email, Password: md5Encode(password)}
-	if insertId, err := (models.Account{}).Add(account); err != nil {
-		panic(err.Error())
-	} else {
-		return true, insertId, ""
-	}
-}
-
-func getAccountByEmail(email string) *models.Account {
-	account, err := models.Account{}.GetByEmail(email)
+	insertId, err := models.AccountAdd(account)
 	if err != nil {
-		panic(err.Error())
+		return 0, fmt.Errorf("add account failure : %s ", err.Error())
 	}
-	return account
+	return insertId, nil
 }
 
 func md5Encode(password string) string {
