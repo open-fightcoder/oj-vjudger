@@ -8,14 +8,24 @@ import (
 	"time"
 
 	"github.com/nsqio/go-nsq"
+	"github.com/open-fightcoder/oj-dispatcher/judger"
 )
 
-const topic = "vjudger"
+const topic = "judge"
 
 func TestSendMessDefault(t *testing.T) {
-	mess := SendMess{SubmitType: "aaaaaa", SubmitId: 8}
+	mess := SendMess{SubmitType: judger.SUBMITTYPE_DEFA, SubmitId: 1}
 	Nsq{}.send(mess)
+}
 
+func TestSendMessSepcial(t *testing.T) {
+	mess := SendMess{SubmitType: judger.SUBMITTYPE_SPEC, SubmitId: 2}
+	Nsq{}.send(mess)
+}
+
+func TestSendMessTest(t *testing.T) {
+	mess := SendMess{SubmitType: judger.SUBMITTYPE_TEST, SubmitId: 3}
+	Nsq{}.send(mess)
 }
 
 type Nsq struct{}

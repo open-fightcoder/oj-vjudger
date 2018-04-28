@@ -9,6 +9,8 @@ func newJudger(ojname string) Judger {
 	switch ojname {
 	case "HDU":
 		return &HDUJudger{}
+	case "CODEVS":
+		return &CodeVSJudger{}
 	default:
 		panic("No such oj: " + ojname)
 	}

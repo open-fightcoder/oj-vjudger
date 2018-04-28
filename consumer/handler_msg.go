@@ -1,10 +1,10 @@
-package comsumer
+package consumer
 
 import (
 	"encoding/json"
 
 	"github.com/nsqio/go-nsq"
-	"github.com/open-fightcoder/oj-vjudger/common/g"
+	//"github.com/open-fightcoder/oj-vjudger/common/g"
 	"github.com/open-fightcoder/oj-vjudger/vjudger"
 	log "github.com/sirupsen/logrus"
 )
@@ -13,7 +13,8 @@ type Handler struct {
 	Topic string
 }
 
-var handlerChan = make(chan struct{}, g.Conf().Nsq.HandlerCount)
+//var handlerChan = make(chan struct{}, g.Conf().Nsq.HandlerCount)
+var handlerChan = make(chan struct{}, 2)
 
 func (this *Handler) HandleMessage(m *nsq.Message) error {
 	log.Infof("HandbleMessage: ", string(m.Body))

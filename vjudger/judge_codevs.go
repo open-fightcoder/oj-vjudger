@@ -51,7 +51,7 @@ var CodeVSLang = map[string]string{
 type CodeVSJudger struct {
 }
 
-func (this *CodeVSJudger) Submit(problemId, language, code string) (string, *http.Client) {
+func (this *CodeVSJudger) Submit(problemId, language, code string) string {
 
 	//init jar
 	jar, _ := cookiejar.New(nil)
@@ -70,7 +70,7 @@ func (this *CodeVSJudger) Submit(problemId, language, code string) (string, *htt
 	req, err := http.NewRequest("POST", "https://login.codevs.com/api/auth/login", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		log.Println("POST https://login.codevs.com/api/auth/login error:", err)
-		return "", nil
+		return ""
 	}
 
 	req.Header.Add("Content-Type", "application/json;charset=UTF-8")
@@ -79,7 +79,7 @@ func (this *CodeVSJudger) Submit(problemId, language, code string) (string, *htt
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Println("err", err)
-		return "", nil
+		return ""
 	}
 	defer resp.Body.Close()
 	jwtResp, _ := ioutil.ReadAll(resp.Body)
@@ -87,7 +87,7 @@ func (this *CodeVSJudger) Submit(problemId, language, code string) (string, *htt
 	var f interface{}
 	err = json.Unmarshal(jwtResp, &f)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Unmarshal error:", err)
 	}
 
 	jwtInterface := f.(map[string]interface{})
@@ -96,14 +96,14 @@ func (this *CodeVSJudger) Submit(problemId, language, code string) (string, *htt
 	html := string(jwtResp)
 	if strings.Index(html, "Unable to login with provided credentials.") >= 0 {
 		log.Println("username or password error")
-		return "", nil
+		return ""
 	}
 
 	client.Get("https://login.codevs.com/auth/redirect/?next=http://codevs.cn/accounts/token/login/&token")
 	req, err = http.NewRequest("GET", "https://login.codevs.com/api/auth/token", nil)
 	if err != nil {
 		log.Println("GET https://login.codevs.com/api/auth/token error")
-		return "", nil
+		return ""
 	}
 
 	req.Header.Add("Authorization", "JWT "+jwt.(string))
@@ -112,7 +112,7 @@ func (this *CodeVSJudger) Submit(problemId, language, code string) (string, *htt
 
 	err = json.Unmarshal(getTokenResp, &f)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Unmarshal error in gettoken:", err)
 	}
 
 	tokenInterface := f.(map[string]interface{})
@@ -122,7 +122,7 @@ func (this *CodeVSJudger) Submit(problemId, language, code string) (string, *htt
 	req, err = http.NewRequest("GET", "http://codevs.cn/problem/1000/", nil)
 	if err != nil {
 		log.Println("GET http://codevs.cn/problem/1000/ error")
-		return "", nil
+		return ""
 	}
 	q, _ := client.Do(req)
 	w, _ := ioutil.ReadAll(q.Body)
@@ -136,7 +136,7 @@ func (this *CodeVSJudger) Submit(problemId, language, code string) (string, *htt
 
 	req, err = http.NewRequest("POST", "http://codevs.cn/judge/", strings.NewReader(uv.Encode()))
 	if err != nil {
-		return "", nil
+		return ""
 	}
 
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
@@ -149,7 +149,7 @@ func (this *CodeVSJudger) Submit(problemId, language, code string) (string, *htt
 	resp, err = client.Do(req)
 	if err != nil {
 		log.Println("POST http://codevs.cn/judge/ error:", err)
-		return "", nil
+		return ""
 	}
 
 	//fmt.Println(resp.StatusCode)
@@ -164,10 +164,10 @@ func (this *CodeVSJudger) Submit(problemId, language, code string) (string, *htt
 	submitIdFloat := idInterface["id"].(float64)
 	submitIdString := strconv.Itoa(int(submitIdFloat))
 	//fmt.Println(submitIdString)
-	return submitIdString, client
+	return submitIdString
 }
 
-func GetResult(submitId string) *Result {
+func (this *CodeVSJudger) GetResult(submitId string) *Result {
 	jar, _ := cookiejar.New(nil)
 	//tr := &http.Transport{
 	//	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -201,7 +201,7 @@ func GetResult(submitId string) *Result {
 	var f interface{}
 	err = json.Unmarshal(jwtResp, &f)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Unmarshal error in jwt:", err)
 	}
 
 	jwtInterface := f.(map[string]interface{})
@@ -226,7 +226,7 @@ func GetResult(submitId string) *Result {
 
 	err = json.Unmarshal(getTokenResp, &f)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Unmarshal error in getToken:", err)
 	}
 
 	tokenInterface := f.(map[string]interface{})
@@ -247,7 +247,7 @@ func GetResult(submitId string) *Result {
 
 	resp, err = client.Get(url)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Unmarshal error in 250", err)
 	}
 	body, _ := ioutil.ReadAll(resp.Body)
 	src := string(body)
@@ -255,20 +255,41 @@ func GetResult(submitId string) *Result {
 	//var f interface{}
 	err = json.Unmarshal(body, &f)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Unmarshal error in 257:", err)
 	}
 
 	respInterface := f.(map[string]interface{})
 	status := respInterface["status"]
 	results := respInterface["results"]
-	statusStr := status.(string)
+	var statusStr, resultsStr, memoryCostStr, timeCostStr string
+	if status == nil {
+		statusStr = ""
+	} else {
+		statusStr = status.(string)
+	}
 	statusStr = fmt.Sprintf("%v", statusStr)
-	resultsStr := results.(string)
+
+	if results == nil {
+		resultsStr = ""
+	} else {
+		resultsStr = results.(string)
+	}
 	resultsStr = fmt.Sprintf("%v", resultsStr)
-	memoryCostStr := status.(string)
+
+	if status == nil {
+		memoryCostStr = ""
+	} else {
+		memoryCostStr = status.(string)
+	}
 	memoryCostStr = fmt.Sprintf("%v", memoryCostStr)
-	timeCostStr := status.(string)
+
+	if status == nil {
+		timeCostStr = ""
+	} else {
+		timeCostStr = status.(string)
+	}
 	timeCostStr = fmt.Sprintf("%v", timeCostStr)
+
 	memoryCostInt, err := strconv.ParseInt(memoryCostStr, 10, 64)
 	timeCostInt, err := strconv.ParseInt(timeCostStr, 10, 64)
 	//fmt.Println(statusStr, resultsStr)

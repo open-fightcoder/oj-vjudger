@@ -15,9 +15,9 @@ func NewJar() *cookiejar.Jar {
 	return cookieJar
 }
 
-func Second(times int) time.Duration {
-	return time.Duration(times) * time.Second
-}
+//func Second(times int) time.Duration {
+//	return time.Duration(times) * time.Second
+//}
 
 func NewProxyClient(proxystring string) (*http.Client, error) {
 	proxy, err := url.Parse(proxystring)
@@ -39,7 +39,8 @@ func NewProxyClient(proxystring string) (*http.Client, error) {
 		// Allow keep cookie
 		Jar: NewJar(),
 		// Allow Timeout
-		Timeout: Second(DefaultTimeOut),
+		//Timeout: Second(DefaultTimeOut),
+		Timeout: 2000*time.Millisecond,
 	}
 	return client, nil
 }
@@ -52,7 +53,8 @@ func NewClient() (*http.Client, error) {
 			return nil
 		},
 		Jar:     NewJar(),
-		Timeout: Second(DefaultTimeOut),
+		//Timeout: Second(DefaultTimeOut),
+		Timeout: 2000*time.Millisecond,
 	}
 	return client, nil
 }

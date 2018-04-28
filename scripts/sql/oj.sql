@@ -61,3 +61,47 @@ CREATE TABLE `account` (
   PRIMARY KEY (`id`),
   KEY `email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+
+
+
+
+
+
+
+
+
+
+CREATE TABLE `submit` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `problem_id` bigint(20) NOT NULL COMMENT '题目ID',
+  `user_id` bigint(20) NOT NULL COMMENT '提交用户ID',
+  `language` varchar(20) NOT NULL COMMENT '提交语言',
+  `submit_time` bigint(20) NOT NULL COMMENT '提交时间',
+  `running_time` int(11) DEFAULT NULL COMMENT '耗时(ms)',
+  `running_memory` int(11) DEFAULT NULL COMMENT '所占空间',
+  `result` int(11) DEFAULT NULL COMMENT '运行结果',
+  `result_des` varchar(500) DEFAULT NULL COMMENT '结果描述',
+  `code` varchar(200) NOT NULL COMMENT '提交代码',
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  KEY `result` (`result`),
+  KEY `problem_id` (`problem_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `submit_test` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `user_id` bigint(20) NOT NULL COMMENT '提交用户ID',
+  `language` varchar(20) NOT NULL COMMENT '提交语言',
+  `submit_time` bigint(20) NOT NULL COMMENT '提交时间',
+  `running_time` int(11) DEFAULT NULL COMMENT '耗时(ms)',
+  `running_memory` int(11) DEFAULT NULL COMMENT '所占空间',
+  `result` int(11) DEFAULT NULL COMMENT '运行状态',
+  `input` varchar(300) DEFAULT NULL COMMENT '输入',
+  `result_des` varchar(300) DEFAULT NULL COMMENT '结果',
+  `code` varchar(200) NOT NULL COMMENT '提交代码',
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  KEY `result` (`result`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

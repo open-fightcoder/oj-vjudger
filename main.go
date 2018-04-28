@@ -9,6 +9,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/open-fightcoder/oj-vjudger/common"
 	"github.com/open-fightcoder/oj-vjudger/common/g"
+	"github.com/open-fightcoder/oj-vjudger/consumer"
 	"github.com/open-fightcoder/oj-vjudger/router"
 )
 
@@ -21,10 +22,12 @@ func main() {
 
 	router := router.GetRouter()
 
+	consumer.Start()
 	graceful.LogListenAndServe(&http.Server{
 		Addr:    fmt.Sprintf(":%d", g.Conf().Run.HTTPPort),
 		Handler: router,
 	})
 
+	consumer.Stop()
 	common.Close()
 }

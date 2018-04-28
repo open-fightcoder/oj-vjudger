@@ -1,7 +1,6 @@
 package ojgetter
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -33,100 +32,40 @@ func (this CodeVSGetter) getter() {
 	for i := 1000; i < end; i++ {
 		c := CodeVSGetter{}
 		problem := c.getProblem(i)
+		if problem.Description==""{
+			continue
+		}
 		c.Save(problem)
 	}
 
 }
 func (this CodeVSGetter) Save(problem models.Problem) {
 
-	problemId := problem.CaseData
-	userProblems, err := models.ProblemUser{}.QueryByCaseData(problemId)
+	srcProblemId := problem.Remark
+	problems, err := models.ProblemQueryByRemark(srcProblemId)
 	if err != nil {
-		panic("QueryByCaseData error:" + err.Error())
+		panic("QueryByRemark error:" + err.Error())
 	}
 
-	if len(userProblems) > 0 {
-		problem.Id = userProblems[0].Id
-		this.update(problem, "user")
-
-		checkProblem, err := models.ProblemCheck{}.QueryByCaseData(problemId)
-		if err != nil {
-			panic("QueryByCaseData error:" + err.Error())
-		}
-
-		if len(checkProblem) > 0 {
-			this.update(problem, "check")
-		} else {
-			this.save(problem, "check")
-		}
-
+	if len(problems) > 0 {
+		problem.Id = problems[0].Id
+		this.update(problem)
 	} else {
-		this.save(problem, "user")
+		this.save(problem)
 	}
 
-	//if problem.Description != "" && problem.InputDes != "" && problem.InputCase != "" && problem.OutputDes != "" && problem.OutputCase != "" {
-	//	problem.Create(&problem)
-	//	fmt.Println(problem)
-	//}
 
 }
 
-func (this CodeVSGetter) update(problem models.Problem, problemType string) {
-	problemJson, err := json.Marshal(problem)
-	if err != nil {
-		panic("CodeVSGetter update: " + err.Error())
-	}
-
-	switch problemType {
-	case "user":
-		problemUser := models.ProblemUser{}
-		if err := json.Unmarshal(problemJson, &problemUser); err != nil {
-			panic("CodeVSGetter update: " + err.Error())
-		}
-
-		models.ProblemUser{}.Create(&problemUser)
-	case "check":
-		problemCheck := models.ProblemCheck{}
-		if err := json.Unmarshal(problemJson, &problemCheck); err != nil {
-			panic("CodeVSGetter save: " + err.Error())
-		}
-
-		problemCheck.UserId = codevsUserId
-
-		models.ProblemCheck{}.Create(&problemCheck)
-	default:
-		panic("CodeVSGetter save: not match problemType " + problemType)
-	}
+func (this CodeVSGetter) update(problem models.Problem) {
+	problem.UserId = codevsUserId
+	models.ProblemUpdate(&problem)
 }
 
-func (this CodeVSGetter) save(problem models.Problem, problemType string) {
-	problemJson, err := json.Marshal(problem)
-	if err != nil {
-		panic("CodeVSGetter save: " + err.Error())
-	}
-
-	switch problemType {
-	case "user":
-		problemUser := models.ProblemUser{}
-		if err := json.Unmarshal(problemJson, &problemUser); err != nil {
-			panic("CodeVSGetter save: " + err.Error())
-		}
-
-		problemUser.UserId = codevsUserId
-
-		models.ProblemUser{}.Create(&problemUser)
-	case "check":
-		problemCheck := models.ProblemCheck{}
-		if err := json.Unmarshal(problemJson, &problemCheck); err != nil {
-			panic("CodeVSGetter save: " + err.Error())
-		}
-
-		problemCheck.UserId = codevsUserId
-
-		models.ProblemCheck{}.Create(&problemCheck)
-	default:
-		panic("CodeVSGetter save: not match problemType " + problemType)
-	}
+func (this CodeVSGetter) save(problem models.Problem) {
+	problem.UserId = codevsUserId
+	problem.LanguageLimit = "C,C++,PASCAL"
+	models.ProblemCreate(&problem)
 }
 
 //处理对应的题目"http://www.codevs.cn/problem/1001/
@@ -138,8 +77,9 @@ func (this CodeVSGetter) getProblem(id int) models.Problem {
 	//fmt.Println(url)
 	resp, err := http.Get(url)
 	if err != nil {
-		//fmt.Println(err)
+		fmt.Println(err)
 		fmt.Println("http.Get() error!")
+		return models.Problem{}
 	}
 	defer resp.Body.Close()
 
@@ -158,11 +98,14 @@ func (this CodeVSGetter) getProblem(id int) models.Problem {
 	//获取title
 	reGetTitle, _ := regexp.Compile(`<h3 class="m-t m-b-sm" style="display:inline-block">  <b>([\S\s]+?)</b></h3>`)
 	title := reGetTitle.FindStringSubmatch(src)
-	//fmt.Println(title, title[1])
+	//fmt.Println("------------",title,title[1][4:len(title[1])-1])
 	//获取limit
 	reLimit, _ := regexp.Compile(`<i class="fa fa-clock-o fa fa-2x fa icon-muted v-middle"></i>[\S\s]+?(\d+) s[\S\s]+?</span>[\S\s]+?<i class="fa fa-flask fa fa-2x fa icon-muted v-middle"></i>[\S\s]+?(\d+)[\S\s]+?</span>`)
 	limit := reLimit.FindStringSubmatch(src)
-	fmt.Println(limit, "---------", limit[1], limit[2])
+	//fmt.Println(limit, "---------", limit[1], limit[2])
+	if limit==nil{
+		return models.Problem{}
+	}
 	time, _ := strconv.Atoi(limit[1])
 	memory, _ := strconv.Atoi(limit[2])
 	//匹配需要的数据,添加外层div防止非目标p标签的干扰
@@ -180,15 +123,15 @@ func (this CodeVSGetter) getProblem(id int) models.Problem {
 
 	}
 
-	problem.CaseData = strconv.Itoa(id)
-	problem.Titile = title[1]
-	problem.Description = temps[0]
-	problem.InputDes = temps[1]
-	problem.OutputDes = temps[2]
-	problem.InputCase = temps[3]
-	problem.OutputCase = temps[4]
-	problem.Hint = temps[5]
-	fmt.Println(temps[5])
+	problem.Remark = strconv.Itoa(id)
+	problem.Title = strings.TrimSpace(title[1][4:len(title[1])-1])
+	problem.Description = strings.TrimSpace(temps[0])
+	problem.InputDes = strings.TrimSpace(temps[1])
+	problem.OutputDes = strings.TrimSpace(temps[2])
+	problem.InputCase = strings.TrimSpace(temps[3])
+	problem.OutputCase = strings.TrimSpace(temps[4])
+	problem.Hint = strings.TrimSpace(temps[5])
+	//fmt.Println(temps[5])
 	problem.TimeLimit = time * 1000
 	problem.MemoryLimit = memory
 	return problem

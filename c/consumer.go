@@ -2,7 +2,7 @@ package consumer
 
 import (
 	"github.com/nsqio/go-nsq"
-	"github.com/open-fightcoder/oj-vjudger/common/g"
+	"github.com/open-fightcoder/oj-dispatcher/common/g"
 	log "github.com/sirupsen/logrus"
 )
 

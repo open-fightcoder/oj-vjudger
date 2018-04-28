@@ -1,7 +1,6 @@
 package ojgetter
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -13,7 +12,7 @@ import (
 
 const (
 	hduBaseUrl = "http://acm.hdu.edu.cn/showproblem.php?pid="
-	HduUserId  = 1
+	hduUserId  = 1
 )
 
 type HDUGetter struct {
@@ -23,9 +22,12 @@ type HDUGetter struct {
 func (this HDUGetter) getter() {
 
 	end := this.getProblemIdMax()
-	for i := 1000; i < end; i++ {
+	for i := 1095; i < end; i++ {
 		h := HDUGetter{}
 		problem := h.getProblem(i)
+		if problem.Description==""{
+			continue
+		}
 		h.Save(problem)
 	}
 
@@ -33,98 +35,33 @@ func (this HDUGetter) getter() {
 
 func (this HDUGetter) Save(problem models.Problem) {
 
-	problemId := problem.CaseData
-	userProblems, err := models.ProblemUser{}.QueryByCaseData(problemId)
+	srcProblemId := problem.Remark
+	problems, err := models.ProblemQueryByRemark(srcProblemId)
 	if err != nil {
-		panic("QueryByCaseData error:" + err.Error())
+		panic("QueryByRemark error:" + err.Error())
 	}
 
-	if len(userProblems) > 0 {
-		problem.Id = userProblems[0].Id
-		this.update(problem, "user")
-
-		checkProblem, err := models.ProblemCheck{}.QueryByCaseData(problemId)
-		if err != nil {
-			panic("QueryByCaseData error:" + err.Error())
-		}
-
-		if len(checkProblem) > 0 {
-			this.update(problem, "check")
-		} else {
-			this.save(problem, "check")
-		}
-
+	if len(problems) > 0 {
+		problem.Id = problems[0].Id
+		this.update(problem)
 	} else {
-		this.save(problem, "user")
+		this.save(problem)
 	}
-
-	//if problem.Description != "" && problem.InputDes != "" && problem.InputCase != "" && problem.OutputDes != "" && problem.OutputCase != "" {
-	//	problem.Create(&problem)
-	//	fmt.Println(problem)
-	//}
 
 }
 
-func (this HDUGetter) update(problem models.Problem, problemType string) {
-	problemJson, err := json.Marshal(problem)
-	if err != nil {
-		panic("HDUGetter update: " + err.Error())
-	}
-
-	switch problemType {
-	case "user":
-		problemUser := models.ProblemUser{}
-		if err := json.Unmarshal(problemJson, &problemUser); err != nil {
-			panic("HDUGetter update: " + err.Error())
-		}
-
-		models.ProblemUser{}.Create(&problemUser)
-	case "check":
-		problemCheck := models.ProblemCheck{}
-		if err := json.Unmarshal(problemJson, &problemCheck); err != nil {
-			panic("HDUGetter save: " + err.Error())
-		}
-
-		problemCheck.UserId = HduUserId
-
-		models.ProblemCheck{}.Create(&problemCheck)
-	default:
-		panic("HDUGetter save: not match problemType " + problemType)
-	}
+func (this HDUGetter) update(problem models.Problem) {
+	problem.UserId = hduUserId
+	models.ProblemUpdate(&problem)
 }
 
-func (this HDUGetter) save(problem models.Problem, problemType string) {
-	problemJson, err := json.Marshal(problem)
-	if err != nil {
-		panic("HDUGetter save: " + err.Error())
-	}
-
-	switch problemType {
-	case "user":
-		problemUser := models.ProblemUser{}
-		if err := json.Unmarshal(problemJson, &problemUser); err != nil {
-			panic("HDUGetter save: " + err.Error())
-		}
-
-		problemUser.UserId = HduUserId
-
-		models.ProblemUser{}.Create(&problemUser)
-	case "check":
-		problemCheck := models.ProblemCheck{}
-		if err := json.Unmarshal(problemJson, &problemCheck); err != nil {
-			panic("HDUGetter save: " + err.Error())
-		}
-
-		problemCheck.UserId = HduUserId
-
-		models.ProblemCheck{}.Create(&problemCheck)
-	default:
-		panic("HDUGetter save: not match problemType " + problemType)
-	}
+func (this HDUGetter) save(problem models.Problem) {
+	problem.UserId = hduUserId
+	models.ProblemCreate(&problem)
 }
 
 func (this HDUGetter) getProblemIdMax() int {
-	return 1005
+	return 1500
 }
 
 //获取对应的题目,例如:"
@@ -136,13 +73,14 @@ func (this HDUGetter) getProblem(id int) models.Problem {
 	resp, err := http.Get(url)
 	if err != nil {
 		fmt.Println("http.Get() error!")
+		return models.Problem{}
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("ioutil.ReadAll() error!")
-		return problem
+		return models.Problem{}
 	}
 
 	src := string(body)
@@ -161,10 +99,11 @@ func (this HDUGetter) getProblem(id int) models.Problem {
 	//fmt.Println("----------", limit[1], limit[2])
 	time, _ := strconv.Atoi(limit[1])
 	memory, _ := strconv.Atoi(limit[2])
-	fmt.Println(time, memory)
+	//fmt.Println(time, memory)
 	//匹配需要的数据,添加外层div防止非目标p标签的干扰
 	re, _ = regexp.Compile(`<div class=panel_content>[\S\s]+?</div>`)
 	temps := re.FindAllString(src, -1)
+	//fmt.Println("------------",len(temps))
 
 	for i := 0; i < len(temps); i++ {
 
@@ -172,20 +111,24 @@ func (this HDUGetter) getProblem(id int) models.Problem {
 		temps[i] = re.ReplaceAllString(temps[i], "")
 
 	}
-	problem.CaseData = strconv.Itoa(id)
-	problem.Titile = title[1]
-	problem.Description = temps[0]
-	problem.InputDes = temps[1]
-	problem.OutputDes = temps[2]
-	problem.InputCase = temps[3]
-	problem.OutputCase = temps[4]
-	problem.Hint = temps[6]
+
+	problem.Remark = strconv.Itoa(id)
+	problem.Title = strings.TrimSpace(title[1])
+	problem.Description = strings.TrimSpace(temps[0])
+	problem.InputDes = strings.TrimSpace(temps[1])
+	problem.OutputDes = strings.TrimSpace(temps[2])
+	problem.InputCase = strings.TrimSpace(temps[3])
+	problem.OutputCase = strings.TrimSpace(temps[4])
+	if len(temps)>5{
+		problem.Hint = strings.TrimSpace(temps[6])
+	}
+
 	problem.TimeLimit = time
 	problem.MemoryLimit = memory
 
 	if problem.Hint == "&nbsp;" {
 		problem.Hint = ""
 	}
-	fmt.Println(problem)
+	//fmt.Println(problem)
 	return problem
 }
