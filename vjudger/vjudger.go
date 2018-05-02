@@ -30,19 +30,27 @@ func DoJudger(job *JudgeJob) {
 		log.Error("no such a user on vjudger")
 		return
 	}
-	submitStr := judger.Submit(strconv.FormatInt(submit.ProblemId, 10), submit.Language, submit.Code)
+	problem, err := models.ProblemGetById(submit.ProblemId)
+	if err != nil {
+		fmt.Println("get problem error in DoJudger")
+	}
+	srcProblemId, err := strconv.ParseInt(problem.Remark, 10, 64)
+	if err != nil {
+		fmt.Println("string to int64 error in srcProblemId")
+	}
+	submitStr := judger.Submit(strconv.FormatInt(srcProblemId, 10), submit.Language, submit.Code)
 	//result := judger.GetResult(strconv.FormatInt(job.SubmitId, 10))
 	result := judger.GetResult(submitStr)
 
 	for {
-		if result.ResultDes == "" {
+		if result.ResultCode <= 3 {
 			time.Sleep(1000 * time.Millisecond)
 			result = judger.GetResult(submitStr)
 		} else {
 			break
 		}
 	}
-	fmt.Printf("-------------%v", result)
+	fmt.Printf("-------------%v\n", result)
 	saveResult(submit, result)
 }
 

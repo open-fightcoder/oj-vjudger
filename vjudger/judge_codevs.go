@@ -25,23 +25,23 @@ var (
 
 var CodeVSRes = map[string]int{
 
-	"等待测试 Pending":                0,
-	"测试通过 Accepted":               1,
-	"编译错误 Compile Error":          2,
-	"测试失败 Rejected":               3,
-	"正在评测 Running":                4,
-	"答案错误 Wrong Answer":           5,
+	"等待测试 Pending":                Waiting,
+	"测试通过 Accepted":               Accepted,
+	"编译错误 Compile Error":          CompilationError,
+	"测试失败 Rejected":               WrongAnswer,
+	"正在评测 Running":                Running,
+	"答案错误 Wrong Answer":           WrongAnswer,
 	"题目无效 Invalid Problem":        6,
-	"非法调用 Restricted Call":        7,
-	"运行错误 Runtime Error":          8,
+	"非法调用 Restricted Call":        RestrictedCall,
+	"运行错误 Runtime Error":          RuntimeError,
 	"暂无数据 Data Missed":            9,
-	"超出时间 Time Limit Exceeded":    10,
-	"超出空间 Memory Limit Exceeded":  11,
-	"过多输出 Output Limit Exceeded":  12,
-	"等待重测 Rejudge Pending":        13,
-	"运行错误(内存访问非法) Runtime Error":  14,
-	"运行错误(浮点错误)    Runtime Error": 15,
-	"正在编译 COMPILING":              16}
+	"超出时间 Time Limit Exceeded":    TimeLimitExceeded,
+	"超出空间 Memory Limit Exceeded":  MemoryLimitExceeded,
+	"过多输出 Output Limit Exceeded":  OutputLimitExceeded,
+	"等待重测 Rejudge Pending":        Waiting,
+	"运行错误(内存访问非法) Runtime Error":  RuntimeError,
+	"运行错误(浮点错误)    Runtime Error": RuntimeError,
+	"正在编译 COMPILING":              Compiling}
 
 var CodeVSLang = map[string]string{
 	"C":      "c",
@@ -251,7 +251,7 @@ func (this *CodeVSJudger) GetResult(submitId string) *Result {
 	}
 	body, _ := ioutil.ReadAll(resp.Body)
 	src := string(body)
-	fmt.Printf("%v", src)
+	fmt.Printf("%v\n", src)
 	//var f interface{}
 	err = json.Unmarshal(body, &f)
 	if err != nil {
@@ -261,7 +261,11 @@ func (this *CodeVSJudger) GetResult(submitId string) *Result {
 	respInterface := f.(map[string]interface{})
 	status := respInterface["status"]
 	results := respInterface["results"]
-	var statusStr, resultsStr, memoryCostStr, timeCostStr string
+	memoryCost := respInterface["memory_cost"]
+	timeCost := respInterface["time_cost"]
+	var statusStr, resultsStr string
+	var memoryCostInt, timeCostInt int64
+	var memoryCostFloat, timeCostFloat float64
 	if status == nil {
 		statusStr = ""
 	} else {
@@ -276,27 +280,33 @@ func (this *CodeVSJudger) GetResult(submitId string) *Result {
 	}
 	resultsStr = fmt.Sprintf("%v", resultsStr)
 
-	if status == nil {
-		memoryCostStr = ""
+	if memoryCost == nil {
+		memoryCostInt = -1
 	} else {
-		memoryCostStr = status.(string)
-	}
-	memoryCostStr = fmt.Sprintf("%v", memoryCostStr)
+		//memoryCostStr = memoryCost.(string)
+		memoryCostFloat = memoryCost.(float64)
+		memoryCostInt = int64(memoryCostFloat)
 
-	if status == nil {
-		timeCostStr = ""
+	}
+	//memoryCostStr = fmt.Sprintf("%v", memoryCostStr)
+
+	if timeCost == nil {
+		timeCostInt = -1
 	} else {
-		timeCostStr = status.(string)
+		timeCostFloat = timeCost.(float64)
+		timeCostInt = int64(timeCostFloat)
 	}
-	timeCostStr = fmt.Sprintf("%v", timeCostStr)
+	//timeCostStr = fmt.Sprintf("%v", timeCostStr)
 
-	memoryCostInt, err := strconv.ParseInt(memoryCostStr, 10, 64)
-	timeCostInt, err := strconv.ParseInt(timeCostStr, 10, 64)
+	//memoryCostInt, err := strconv.ParseInt(memoryCostStr, 10, 64)
+	//timeCostInt, err := strconv.ParseInt(timeCostStr, 10, 64)
 	//fmt.Println(statusStr, resultsStr)
 	result := &Result{}
+	result.ResultCode = CodeVSRes[statusStr]
 	result.ResultDes = resultsStr
-	result.RunningMemory = memoryCostInt
+	result.RunningMemory = memoryCostInt / 1024
 	result.RunningTime = timeCostInt
+	log.Debug("++++++++++++", CodeVSRes[statusStr], resultsStr, memoryCostInt/1024, timeCostInt)
 
 	//将html标签全部转换成小写
 	//re, _ := regexp.Compile(`<[\S\s]+?>`)

@@ -13,6 +13,7 @@ const (
 	OutputLimitExceeded int = 9  //OLE	用户程序输出的结果大大超出正确答案的长度
 	RuntimeError        int = 10 //RE	用户程序发生运行时错误
 	SystemError         int = 11 //SE	用户程序不能被评测系统正常运行
+	RestrictedCall      int = 12 //RC   非法调用
 )
 
 type Result struct {
