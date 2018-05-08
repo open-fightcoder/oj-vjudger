@@ -15,8 +15,19 @@ type Config struct {
 	Mysql MysqlConfig `toml:"mysql"`
 	Jwt   JwtConfig   `toml:"jwt"`
 	Nsq   NsqConfig   `toml:"nsq"`
+	Minio MinioConfig `toml:"minio"`
+
 }
 
+type MinioConfig struct {
+	Endpoint        string `toml:"endpoint"`
+	AccessKeyID     string `toml:"accessKeyID"`
+	SecretAccessKey string `toml:"secretAccessKey"`
+	Secure          bool   `toml:"secure"`
+	ImgBucket       string `toml:"imgBucket"`
+	CodeBucket      string `toml:"codeBucket"`
+	CaseBucket      string `toml:"caseBucket"`
+}
 type RunConfig struct {
 	WaitTimeout int    `toml:"waitTimeout"`
 	HTTPPort    int    `toml:"httpPort"`

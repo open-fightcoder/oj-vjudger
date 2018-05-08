@@ -29,3 +29,13 @@ judgeTopic = "vjudger"
 judgeChannel = "vj"
 maxInFlight = 10   #最大允许向n台nsqd接收数据
 handlerCount = 10
+
+
+[minio]
+endpoint = "xupt1.fightcoder.com:9000"
+accessKeyID = "FightCoder"
+secretAccessKey = "LetsToChangeTheWorld"
+secure = false
+imgBucket = "image"
+codeBucket = "code"
+caseBucket = "case"

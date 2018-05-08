@@ -24,13 +24,13 @@ type CodeVSGetter struct {
 //
 //}
 func (this CodeVSGetter) getProblemIdMax() int {
-	return 2231
+	return 3650
 }
 
 func (this CodeVSGetter) getter() {
 
 	end := this.getProblemIdMax()
-	for i := 2230; i < end; i++ {
+	for i := 3587; i < end; i++ {
 		c := CodeVSGetter{}
 		problem := c.getProblem(i)
 		if problem.Description == "" {
@@ -133,7 +133,7 @@ func (this CodeVSGetter) getProblem(id int) models.Problem {
 		temps[i] = re.ReplaceAllString(temps[i], "<p>")
 		re, _ = regexp.Compile(`<span [\S\s]+?>`)
 		temps[i] = re.ReplaceAllString(temps[i], "<span>")
-		fmt.Println(i, temps[i], "---------------", len(strings.TrimSpace(temps[i])))
+		//fmt.Println(i, temps[i], "---------------", len(strings.TrimSpace(temps[i])))
 	}
 
 	problem.Remark = strconv.Itoa(id)
