@@ -6,7 +6,7 @@ import (
 
 func TestSubmitCreate(t *testing.T) {
 	InitAllInTest()
-	submit := Submit{ProblemId: 1000, UserId: 1, Language: "C++", SubmitTime: 1524905061, Code: "#include<iostream>using namespace std;int main(){int a,b;while(cin>>a>>b){cout<<a+b<<endl;}return 0;}"}
+	submit := Submit{ProblemId: 1000, UserId: 3, Language: "C++", SubmitTime: 1524905061, Code: "#include<iostream>using namespace std;int main(){int a,b;while(cin>>a>>b){cout<<a+b<<endl;}return 0;}"}
 
 	if _, err := SubmitCreate(&submit); err != nil {
 		t.Error("create submit error")

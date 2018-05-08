@@ -2,7 +2,7 @@
 workspace=$(cd $(dirname $0) && pwd -P)
 cd $workspace
 
-app="oj-vjudger"
+app=oj-vjudger
 cfg=cfg/cfg.toml.release
 pidfile=var/app.pid
 logfile=logs/app.log
@@ -19,10 +19,10 @@ function start() {
 		exit 0
 	fi
 
-	echo "use cfg file: $conf"
+	echo "use cfg file: $cfg"
 
 	# start new
-	nohup $app -c $conf >>$logfile 2>&1 &
+	nohup ./$app -c $cfg >>$logfile 2>&1 &
 	local lpid=$!
 	sleep 1
 
@@ -58,7 +58,7 @@ function restart() {
 	stop
 	local lnum=$?
 	if [ $lnum == 0 ]; then
-		start	
+		start
 	fi
 }
 
