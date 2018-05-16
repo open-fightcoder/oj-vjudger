@@ -7,6 +7,7 @@ maxAllowed = 5  # 最大请求量
 [log]
 enable = false  # 是否启动输出到文件
 path = "./logs" # 日志路径
+level = "info"
 rotatTime = 1   # 日志切割时间间隔：1天
 maxAge = 30     # 文件最大保存时间：30天
 

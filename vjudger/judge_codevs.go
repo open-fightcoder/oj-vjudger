@@ -18,8 +18,8 @@ import (
 )
 
 var (
-	codevsUserList = []string{"tyming@fightcoder.com"}
-	codevsPassList = []string{"tyming"}
+	codevsUserList = []string{"tyming@fightcoder.com","shiyi@fightcoder.com","xiaojing@fightcoder.com","leeezm@fightcoder.com"}
+	codevsPassList = []string{"tyming","fightcoder","jing624525","fightcoder"}
 	codevsMutexMap map[string]*sync.Mutex
 )
 
@@ -44,126 +44,150 @@ var CodeVSRes = map[string]int{
 	"正在编译 COMPILING":              Compiling}
 
 var CodeVSLang = map[string]string{
-	"C":      "c",
-	"C++":    "cpp",
-	"Pascal": "pas"}
+	"c":      "c",
+	"c++":    "cpp",
+	"pascal": "pas"}
 
 type CodeVSJudger struct {
 }
 
 func (this *CodeVSJudger) Submit(problemId, language, code string) string {
 
-	//init jar
-	jar, _ := cookiejar.New(nil)
-	//tr := &http.Transport{
-	//	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	//}
-	client := &http.Client{Jar: jar}
-	//获取cookie
-	client.Get("http://www.codevs.cn/")
+	var submitIdString string
+	flag:=false
+	for _, i := range rand.Perm(len(codevsUserList)) {
 
-	index := rand.Intn(5)
-	index = index % len(codevsUserList)
-	//login data
-	values := map[string]string{"username": codevsUserList[index], "password": codevsPassList[index]}
-	jsonStr, _ := json.Marshal(values)
-	req, err := http.NewRequest("POST", "https://login.codevs.com/api/auth/login", bytes.NewBuffer(jsonStr))
-	if err != nil {
-		log.Println("POST https://login.codevs.com/api/auth/login error:", err)
-		return ""
+		//init jar
+		jar, _ := cookiejar.New(nil)
+		//tr := &http.Transport{
+		//	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		//}
+		client := &http.Client{Jar: jar}
+		//获取cookie
+		client.Get("http://www.codevs.cn/")
+
+		//index := rand.Intn(5)
+		//index = index % len(codevsUserList)
+		//login data
+		values := map[string]string{"username": codevsUserList[i], "password": codevsPassList[i]}
+		fmt.Println("username and password:",codevsUserList[i],codevsPassList[i])
+		jsonStr, _ := json.Marshal(values)
+		req, err := http.NewRequest("POST", "https://login.codevs.com/api/auth/login", bytes.NewBuffer(jsonStr))
+		if err != nil {
+			log.Println("POST https://login.codevs.com/api/auth/login error:", err)
+			return ""
+		}
+
+		req.Header.Add("Content-Type", "application/json;charset=UTF-8")
+		req.Header.Add("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.86 Safari/537.36")
+
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Println("err", err)
+			return ""
+		}
+		defer resp.Body.Close()
+		jwtResp, _ := ioutil.ReadAll(resp.Body)
+
+		var f interface{}
+		err = json.Unmarshal(jwtResp, &f)
+		if err != nil {
+			fmt.Println("Unmarshal error:", err)
+		}
+
+		jwtInterface := f.(map[string]interface{})
+		jwt := jwtInterface["jwt"]
+		//判断帐号密码
+		html := string(jwtResp)
+		if strings.Index(html, "Unable to login with provided credentials.") >= 0 {
+			log.Println("username or password error")
+			return ""
+		}
+
+		client.Get("https://login.codevs.com/auth/redirect/?next=http://codevs.cn/accounts/token/login/&token")
+		req, err = http.NewRequest("GET", "https://login.codevs.com/api/auth/token", nil)
+		if err != nil {
+			log.Println("GET https://login.codevs.com/api/auth/token error")
+			return ""
+		}
+
+		req.Header.Add("Authorization", "JWT "+jwt.(string))
+		resp, _ = client.Do(req)
+		getTokenResp, _ := ioutil.ReadAll(resp.Body)
+
+		err = json.Unmarshal(getTokenResp, &f)
+		if err != nil {
+			fmt.Println("Unmarshal error in gettoken:", err)
+		}
+
+		tokenInterface := f.(map[string]interface{})
+		token := tokenInterface["token"]
+
+		client.Get("http://codevs.cn/accounts/token/login/?token=" + token.(string))
+		req, err = http.NewRequest("GET", "http://codevs.cn/problem/1000/", nil)
+		if err != nil {
+			log.Println("GET http://codevs.cn/problem/1000/ error")
+			return ""
+		}
+		q, _ := client.Do(req)
+		w, _ := ioutil.ReadAll(q.Body)
+		html = string(w)
+		//fmt.Println(html)
+		uv := url.Values{}
+		uv.Add("code", code)
+		uv.Add("id", problemId)
+		uv.Add("format", CodeVSLang[language])
+		uv.Add("csrfmiddlewaretoken", client.Jar.Cookies(req.URL)[0].Value)
+
+		req, err = http.NewRequest("POST", "http://codevs.cn/judge/", strings.NewReader(uv.Encode()))
+		if err != nil {
+			return ""
+		}
+
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+		req.Header.Add("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.86 Safari/537.36")
+		req.Header.Add("X-Requested-With", "XMLHttpRequest")
+		req.Header.Add("Connection", "keep-alive")
+		req.Header.Add("Upgrade-Insecure-Requests", "1")
+		req.Header.Set("Referer", "http://codevs.cn/problem/"+problemId+"/")
+
+		resp, err = client.Do(req)
+		if err != nil {
+			log.Println("POST http://codevs.cn/judge/ error:", err)
+			return ""
+		}
+
+
+		//fmt.Println(resp.StatusCode)
+		judgeResp, _ := ioutil.ReadAll(resp.Body)
+		html = string(judgeResp)
+		err = json.Unmarshal(judgeResp, &f)
+		if err != nil {
+			log.Println(err)
+			return ""
+		}
+
+		idInterface := f.(map[string]interface{})
+		if idInterface["id"] == nil{
+			continue
+		}
+		submitIdFloat := idInterface["id"].(float64)
+		submitIdString = strconv.Itoa(int(submitIdFloat))
+		//fmt.Println(submitIdString)
+
+		success:=idInterface["success"].(bool)
+		if success == true {
+			flag=true
+		}
+
+
+		if flag {
+			break
+		} else {
+			continue
+		}
+
 	}
-
-	req.Header.Add("Content-Type", "application/json;charset=UTF-8")
-	req.Header.Add("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.86 Safari/537.36")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Println("err", err)
-		return ""
-	}
-	defer resp.Body.Close()
-	jwtResp, _ := ioutil.ReadAll(resp.Body)
-
-	var f interface{}
-	err = json.Unmarshal(jwtResp, &f)
-	if err != nil {
-		fmt.Println("Unmarshal error:", err)
-	}
-
-	jwtInterface := f.(map[string]interface{})
-	jwt := jwtInterface["jwt"]
-	//判断帐号密码
-	html := string(jwtResp)
-	if strings.Index(html, "Unable to login with provided credentials.") >= 0 {
-		log.Println("username or password error")
-		return ""
-	}
-
-	client.Get("https://login.codevs.com/auth/redirect/?next=http://codevs.cn/accounts/token/login/&token")
-	req, err = http.NewRequest("GET", "https://login.codevs.com/api/auth/token", nil)
-	if err != nil {
-		log.Println("GET https://login.codevs.com/api/auth/token error")
-		return ""
-	}
-
-	req.Header.Add("Authorization", "JWT "+jwt.(string))
-	resp, _ = client.Do(req)
-	getTokenResp, _ := ioutil.ReadAll(resp.Body)
-
-	err = json.Unmarshal(getTokenResp, &f)
-	if err != nil {
-		fmt.Println("Unmarshal error in gettoken:", err)
-	}
-
-	tokenInterface := f.(map[string]interface{})
-	token := tokenInterface["token"]
-
-	client.Get("http://codevs.cn/accounts/token/login/?token=" + token.(string))
-	req, err = http.NewRequest("GET", "http://codevs.cn/problem/1000/", nil)
-	if err != nil {
-		log.Println("GET http://codevs.cn/problem/1000/ error")
-		return ""
-	}
-	q, _ := client.Do(req)
-	w, _ := ioutil.ReadAll(q.Body)
-	html = string(w)
-	//fmt.Println(html)
-	uv := url.Values{}
-	uv.Add("code", code)
-	uv.Add("id", problemId)
-	uv.Add("format", CodeVSLang[language])
-	uv.Add("csrfmiddlewaretoken", client.Jar.Cookies(req.URL)[0].Value)
-
-	req, err = http.NewRequest("POST", "http://codevs.cn/judge/", strings.NewReader(uv.Encode()))
-	if err != nil {
-		return ""
-	}
-
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-	req.Header.Add("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.86 Safari/537.36")
-	req.Header.Add("X-Requested-With", "XMLHttpRequest")
-	req.Header.Add("Connection", "keep-alive")
-	req.Header.Add("Upgrade-Insecure-Requests", "1")
-	req.Header.Set("Referer", "http://codevs.cn/problem/"+problemId+"/")
-
-	resp, err = client.Do(req)
-	if err != nil {
-		log.Println("POST http://codevs.cn/judge/ error:", err)
-		return ""
-	}
-
-	//fmt.Println(resp.StatusCode)
-	judgeResp, _ := ioutil.ReadAll(resp.Body)
-	html = string(judgeResp)
-	err = json.Unmarshal(judgeResp, &f)
-	if err != nil {
-		log.Println(err)
-	}
-
-	idInterface := f.(map[string]interface{})
-	submitIdFloat := idInterface["id"].(float64)
-	submitIdString := strconv.Itoa(int(submitIdFloat))
-	//fmt.Println(submitIdString)
 	return submitIdString
 }
 
@@ -263,6 +287,7 @@ func (this *CodeVSJudger) GetResult(submitId string) *Result {
 	results := respInterface["results"]
 	memoryCost := respInterface["memory_cost"]
 	timeCost := respInterface["time_cost"]
+
 	var statusStr, resultsStr string
 	var memoryCostInt, timeCostInt int64
 	var memoryCostFloat, timeCostFloat float64
@@ -306,7 +331,7 @@ func (this *CodeVSJudger) GetResult(submitId string) *Result {
 	result.ResultDes = resultsStr
 	result.RunningMemory = memoryCostInt / 1024
 	result.RunningTime = timeCostInt
-	log.Debug("++++++++++++", CodeVSRes[statusStr], resultsStr, memoryCostInt/1024, timeCostInt)
+	//log.Debug("++++++++++++", CodeVSRes[statusStr], resultsStr, memoryCostInt/1024, timeCostInt)
 
 	//将html标签全部转换成小写
 	//re, _ := regexp.Compile(`<[\S\s]+?>`)

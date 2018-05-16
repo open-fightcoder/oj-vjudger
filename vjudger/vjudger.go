@@ -28,15 +28,20 @@ func DoJudger(job *JudgeJob) {
 	//	log.Error("no such a user")
 	//	return
 	//}
-	if submit.UserId == 1 {
+	problem,err:=models.ProblemGetById(submit.ProblemId)
+	if err!=nil{
+		log.Debugf("problem get by id error in DoJudger")
+	}
+
+	if problem.UserId == 4 {
 		judger = newJudger("HDU")
-	} else if submit.UserId == 2 {
+	} else if problem.UserId == 3 {
 		judger = newJudger("CODEVS")
 	} else {
 		log.Error("no such a user on vjudger")
 		return
 	}
-	problem, err := models.ProblemGetById(submit.ProblemId)
+	//problem, err := models.ProblemGetById(submit.ProblemId)
 	if err != nil {
 		fmt.Println("get problem error in DoJudger")
 	}
@@ -81,6 +86,7 @@ func GetData(submitId int64) models.Submit {
 	submit, err := models.SubmitGetById(submitId)
 	if err != nil {
 		log.Debug("get submit by id error")
+		return models.Submit{}
 	}
 	return *submit
 	//return strconv.FormatInt(submit.ProblemId,10),submit.Language,submit.Code
@@ -88,10 +94,11 @@ func GetData(submitId int64) models.Submit {
 }
 
 func saveResult(submit models.Submit, result *Result) {
-	submit.Code = strconv.Itoa(result.ResultCode)
+	submit.Result = result.ResultCode
 	submit.ResultDes = result.ResultDes
 	submit.RunningTime = result.RunningTime
 	submit.RunningMemory = result.RunningMemory
+
 	models.SubmitUpdate(&submit)
 
 }

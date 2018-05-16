@@ -29,7 +29,7 @@ func NewProxyClient(proxystring string) (*http.Client, error) {
 	client := &http.Client{
 		// Allow redirect
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			log.Println("Redirect:%v", req.URL)
+			log.Printf("Redirect:%v", req.URL)
 			return nil
 		},
 		// Allow proxy

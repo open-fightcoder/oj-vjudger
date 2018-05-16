@@ -24,13 +24,13 @@ type CodeVSGetter struct {
 //
 //}
 func (this CodeVSGetter) getProblemIdMax() int {
-	return 3650
+	return 3646
 }
 
 func (this CodeVSGetter) getter() {
 
 	end := this.getProblemIdMax()
-	for i := 3587; i < end; i++ {
+	for i := 1000; i < end; i++ {
 		c := CodeVSGetter{}
 		problem := c.getProblem(i)
 		if problem.Description == "" {
@@ -64,7 +64,7 @@ func (this CodeVSGetter) update(problem models.Problem) {
 
 func (this CodeVSGetter) save(problem models.Problem) {
 	problem.UserId = codevsUserId
-	problem.LanguageLimit = "C,C++,PASCAL"
+	problem.LanguageLimit = "c,c++,pascal"
 	models.ProblemCreate(&problem)
 }
 
@@ -99,15 +99,19 @@ func (this CodeVSGetter) getProblem(id int) models.Problem {
 	reGetTitle, _ := regexp.Compile(`<h3 class="m-t m-b-sm" style="display:inline-block">  <b>([\S\s]+?)</b></h3>`)
 	title := reGetTitle.FindStringSubmatch(src)
 	//fmt.Println("------------",title,title[1][4:len(title[1])-1])
+	//获取难度
+
+
 	//获取limit
-	reLimit, _ := regexp.Compile(`<i class="fa fa-clock-o fa fa-2x fa icon-muted v-middle"></i>[\S\s]+?(\d+) s[\S\s]+?</span>[\S\s]+?<i class="fa fa-flask fa fa-2x fa icon-muted v-middle"></i>[\S\s]+?(\d+)[\S\s]+?</span>`)
+	reLimit, _ := regexp.Compile(`<i class="fa fa-clock-o fa fa-2x fa icon-muted v-middle"></i>[\S\s]+?(\d+) s[\S\s]+?</span>[\S\s]+?<i class="fa fa-flask fa fa-2x fa icon-muted v-middle"></i>[\S\s]+?(\d+)[\S\s]+?</span>[\S\s]+?<i class="fa fa-trophy fa fa-2x fa icon-muted v-middle"></i>[\S\s]+?(\w+)[\S\s]+?</span>[\S\s]+?`)
 	limit := reLimit.FindStringSubmatch(src)
-	//fmt.Println(limit, "---------", limit[1], limit[2])
+	//fmt.Println(limit, "---------", limit[1], limit[2],limit[3])
 	if limit == nil {
 		return models.Problem{}
 	}
 	time, _ := strconv.Atoi(limit[1])
 	memory, _ := strconv.Atoi(limit[2])
+	difficulty:=limit[3]
 	//匹配需要的数据,添加外层div防止非目标p标签的干扰
 	//re, _ = regexp.Compile(`<div class="panel-body">[\S\s]+?<p>[\S\s]+?</p>[\S\s]+?</div>`)
 	re, _ = regexp.Compile(`<div class="panel-body">[\S\s]+?</div>`)
@@ -149,5 +153,16 @@ func (this CodeVSGetter) getProblem(id int) models.Problem {
 	problem.TimeLimit = time * 1000
 	problem.MemoryLimit = memory
 	//fmt.Println("------------", problem)
+
+	if difficulty == "Bronze"{
+		problem.Difficulty = "简单"
+	}else if difficulty == "Silver"{
+		problem.Difficulty = "中等"
+	}else if difficulty == "Gold"{
+		problem.Difficulty = "困难"
+	}else{
+		problem.Difficulty = "极难"
+	}
+
 	return problem
 }
