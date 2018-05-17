@@ -222,7 +222,7 @@ func saveResult(submit models.Submit, result *Result) {
 func isAc(submit *models.Submit) bool {
 	submitList, _ := models.SubmitGetByUserId(submit.UserId)
 	for _, sub := range submitList {
-		if sub.Result == Accepted {
+		if sub.Result == Accepted && sub.ProblemId == submit.ProblemId{
 			return true
 		}
 	}
