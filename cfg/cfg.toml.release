@@ -36,7 +36,6 @@ secretAccessKey = "LetsToChangeTheWorld"
 secure = false
 imgBucket = "image"
 codeBucket = "code"
-caseBucket = "case"
 
 [redis]
 address = "10.0.1.214:6379"      # redis address

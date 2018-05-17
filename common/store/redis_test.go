@@ -5,7 +5,7 @@ import (
 
 	"strconv"
 
-	"github.com/open-fightcoder/oj-judger/common/g"
+	"github.com/open-fightcoder/oj-vjudger/common/g"
 )
 
 func TestList(t *testing.T) {

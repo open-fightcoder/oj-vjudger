@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	. "github.com/open-fightcoder/oj-judger/common/store"
+	. "github.com/open-fightcoder/oj-vjudger/common/store"
 )
 
 func ProblemNumGet() (string, error) {

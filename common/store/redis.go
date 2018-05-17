@@ -1,5 +1,6 @@
 package store
 
+<<<<<<< HEAD
 import (
 	"sync"
 	"log"
@@ -28,4 +29,12 @@ func InitRedis() {
 
 func CloseRedis() {
 	RedisClient.Close()
+=======
+func InitRedis() {
+
+}
+
+func CloseRedis() {
+
+>>>>>>> bd277c7ed08a2ecae5ddf41d9ae870e984e38ef2
 }

@@ -3,8 +3,8 @@ package redis
 import (
 	"testing"
 
-	"github.com/open-fightcoder/oj-judger/common/g"
-	"github.com/open-fightcoder/oj-judger/common/store"
+	"github.com/open-fightcoder/oj-vjudger/common/g"
+	"github.com/open-fightcoder/oj-vjudger/common/store"
 )
 
 func TestRankGet(t *testing.T) {

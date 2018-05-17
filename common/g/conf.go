@@ -27,6 +27,7 @@ type RedisConfig struct {
 	PoolSize int    `toml:"poolSize"`
 }
 
+
 type MinioConfig struct {
 	Endpoint        string `toml:"endpoint"`
 	AccessKeyID     string `toml:"accessKeyID"`

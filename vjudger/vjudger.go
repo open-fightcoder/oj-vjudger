@@ -16,6 +16,7 @@ import (
 	"io/ioutil"
 	"github.com/open-fightcoder/oj-vjudger/redis"
 	"encoding/json"
+
 )
 
 type JudgeJob struct {
@@ -38,6 +39,7 @@ type SubmitCount struct {
 	RuntimeError        int64 `json:"runtime_error"`
 	SystemError         int64 `json:"system_error"`
 }
+
 func DoJudger(job *JudgeJob) {
 	var judger Judger
 	submit := GetData(job.SubmitId)
@@ -211,9 +213,11 @@ func saveResult(submit models.Submit, result *Result) {
 		}
 	}
 
+
 	models.SubmitUpdate(&submit)
 
 }
+
 
 func isAc(submit *models.Submit) bool {
 	submitList, _ := models.SubmitGetByUserId(submit.UserId)
@@ -224,6 +228,7 @@ func isAc(submit *models.Submit) bool {
 	}
 	return false
 }
+
 
 func GetCode(code string, workDir string) error {
 	err := store.MinioClient.FGetObject(g.Conf().Minio.CodeBucket,

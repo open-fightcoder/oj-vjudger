@@ -135,6 +135,7 @@
 			"notests": true
 		},
 		{
+<<<<<<< HEAD
 			"importpath": "github.com/go-redis/redis",
 			"repository": "https://github.com/go-redis/redis",
 			"vcs": "git",
@@ -143,6 +144,8 @@
 			"notests": true
 		},
 		{
+=======
+>>>>>>> bd277c7ed08a2ecae5ddf41d9ae870e984e38ef2
 			"importpath": "github.com/go-sql-driver/mysql",
 			"repository": "https://github.com/go-sql-driver/mysql",
 			"vcs": "git",

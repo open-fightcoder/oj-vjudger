@@ -11,11 +11,11 @@ import (
 
 	"github.com/mholt/archiver"
 	"github.com/minio/minio-go"
-	"github.com/open-fightcoder/oj-judger/common/g"
-	"github.com/open-fightcoder/oj-judger/common/store"
-	"github.com/open-fightcoder/oj-judger/judge"
-	"github.com/open-fightcoder/oj-judger/models"
-	"github.com/open-fightcoder/oj-judger/redis"
+	"github.com/open-fightcoder/oj-vjudger/common/g"
+	"github.com/open-fightcoder/oj-vjudger/common/store"
+	"github.com/open-fightcoder/oj-vjudger/judge"
+	"github.com/open-fightcoder/oj-vjudger/models"
+	"github.com/open-fightcoder/oj-vjudger/redis"
 	log "github.com/sirupsen/logrus"
 )
 

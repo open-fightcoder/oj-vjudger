@@ -7,7 +7,7 @@ import (
 
 	"strings"
 
-	. "github.com/open-fightcoder/oj-judger/common/store"
+	. "github.com/open-fightcoder/oj-vjudger/common/store"
 )
 
 func ProblemStatusGet(userId int64, problemId int64) (int, error) {
