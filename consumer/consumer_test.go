@@ -13,7 +13,7 @@ import (
 const topic = "vjudger"
 
 func TestSendMessDefault(t *testing.T) {
-	mess := SendMess{SubmitType: "aaaaaa", SubmitId: 2}
+	mess := SendMess{SubmitType: "aaaaaa", SubmitId: 10}
 	Nsq{}.send(mess)
 
 }

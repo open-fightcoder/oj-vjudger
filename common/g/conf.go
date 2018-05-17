@@ -16,7 +16,15 @@ type Config struct {
 	Jwt   JwtConfig   `toml:"jwt"`
 	Nsq   NsqConfig   `toml:"nsq"`
 	Minio MinioConfig `toml:"minio"`
+	Redis RedisConfig `toml:"redis"`
 
+}
+
+type RedisConfig struct {
+	Address  string `toml:"address"`
+	Password string `toml:"password"`
+	Database int    `toml:"database"`
+	PoolSize int    `toml:"poolSize"`
 }
 
 type MinioConfig struct {

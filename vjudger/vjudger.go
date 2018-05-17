@@ -14,13 +14,30 @@ import (
 	"path/filepath"
 	"github.com/minio/minio-go"
 	"io/ioutil"
+	"github.com/open-fightcoder/oj-vjudger/redis"
+	"encoding/json"
 )
 
 type JudgeJob struct {
 	SubmitType string `json:"submit_type"`
 	SubmitId   int64  `json:"submit_id"`
 }
+type ProblemCount struct {
+	AcNum    int64 `json:"ac_num"`
+	TotalNum int64 `json:"total_num"`
+}
 
+type SubmitCount struct {
+	Accepted            int64 `json:"accepted"`
+	FailNum             int64 `json:"fail_num"`
+	WrongAnswer         int64 `json:"wrong_answer"`
+	CompilationError    int64 `json:"compilation_error"`
+	TimeLimitExceeded   int64 `json:"time_limit_exceeded"`
+	MemoryLimitExceeded int64 `json:"memory_limit_exceeded"`
+	OutputLimitExceeded int64 `json:"output_limit_exceeded"`
+	RuntimeError        int64 `json:"runtime_error"`
+	SystemError         int64 `json:"system_error"`
+}
 func DoJudger(job *JudgeJob) {
 	var judger Judger
 	submit := GetData(job.SubmitId)
@@ -99,8 +116,113 @@ func saveResult(submit models.Submit, result *Result) {
 	submit.RunningTime = result.RunningTime
 	submit.RunningMemory = result.RunningMemory
 
+	//更新redis
+	if submit.Result == Accepted {
+		log.Debug("AC")
+		log.Debug(isAc(&submit))
+		if !isAc(&submit) {
+			log.Debug("更新排行榜")
+			err := redis.PersonWeekRankUpdate(1, submit.UserId)
+			if err != nil {
+				log.Debug("PersonWeekRankUpdate:", err.Error())
+			}
+			err = redis.PersonMonthRankUpdate(1, submit.UserId)
+			if err != nil {
+				log.Debug("PersonMonthRankUpdate:", err.Error())
+			}
+			err = redis.RankListUpdate(1, submit.UserId)
+			if err != nil {
+				log.Debug("RankListUpdate:", err.Error())
+			}
+		}
+		log.Debug("set 1")
+		redis.ProblemStatusSet(submit.UserId, submit.ProblemId, 1)
+	}
+
+	if submit.Result > Running {
+		if submit.Result != Accepted && !isAc(&submit) {
+			log.Debug("set 2")
+			redis.ProblemStatusSet(submit.UserId, submit.ProblemId, 2)
+		}
+
+		jsonStr, err := redis.ProblemCountGet(submit.ProblemId)
+		if err != nil {
+			log.Error("problemCount get failure:", err.Error())
+			return
+		}
+		var problemCount ProblemCount
+		err = json.Unmarshal([]byte(jsonStr), &problemCount)
+		if err != nil {
+			log.Error("problemCount get failure:", err.Error())
+			return
+		}
+		problemCount.TotalNum += 1
+		if submit.Result == Accepted {
+			problemCount.AcNum += 1
+		}
+		data, err := json.Marshal(problemCount)
+		if err != nil {
+			log.Error("problemCount set failure:", err.Error())
+			return
+		}
+		flag := redis.ProblemCountSet(submit.ProblemId, string(data))
+		if !flag {
+			log.Error("problemCount set failure")
+		}
+
+		jsonStr, err = redis.SubmitCountGet(submit.UserId)
+		if err != nil {
+			log.Error("submitcount get failure:", err.Error())
+			return
+		}
+		var submitCount SubmitCount
+		err = json.Unmarshal([]byte(jsonStr), &submitCount)
+		if err != nil {
+			log.Error("submitcount get failure:", err.Error())
+			return
+		}
+		switch submit.Result {
+		case Accepted:
+			submitCount.Accepted += 1
+		case WrongAnswer:
+			submitCount.WrongAnswer += 1
+		case CompilationError:
+			submitCount.CompilationError += 1
+		case TimeLimitExceeded:
+			submitCount.TimeLimitExceeded += 1
+		case MemoryLimitExceeded:
+			submitCount.MemoryLimitExceeded += 1
+		case OutputLimitExceeded:
+			submitCount.OutputLimitExceeded += 1
+		case RuntimeError:
+			submitCount.RuntimeError += 1
+		case SystemError:
+			submitCount.SystemError += 1
+		}
+
+		data, err = json.Marshal(submitCount)
+		if err != nil {
+			log.Error("submitcount set failure:", err.Error())
+			return
+		}
+		flag = redis.SubmitCountSet(submit.UserId, string(data))
+		if !flag {
+			log.Error("submitcount set failure")
+		}
+	}
+
 	models.SubmitUpdate(&submit)
 
+}
+
+func isAc(submit *models.Submit) bool {
+	submitList, _ := models.SubmitGetByUserId(submit.UserId)
+	for _, sub := range submitList {
+		if sub.Result == Accepted {
+			return true
+		}
+	}
+	return false
 }
 
 func GetCode(code string, workDir string) error {

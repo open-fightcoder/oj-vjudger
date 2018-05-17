@@ -40,3 +40,9 @@ secure = false
 imgBucket = "image"
 codeBucket = "code"
 caseBucket = "case"
+
+[redis]
+address = "127.0.0.1:6379"      # redis address
+password = ""                   # no password set
+database = 0                    # use default DB
+poolSize = 5

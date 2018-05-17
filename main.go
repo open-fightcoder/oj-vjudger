@@ -14,6 +14,7 @@ import (
 )
 
 func main() {
+
 	cfgFile := flag.String("c", "cfg/cfg.toml.debug", "set config file")
 	flag.Parse()
 
