@@ -41,22 +41,16 @@ func SubmitGetById(id int64) (*Submit, error) {
 	return submit, nil
 }
 
-<<<<<<< HEAD
 func SubmitGetByUserId(userId int64) ([]*Submit, error) {
 	submitList := make([]*Submit, 0)
 	err := OrmWeb.Where("user_id=?", userId).Find(&submitList)
-=======
-func SubmitGetByUserId(userId int64, currentPage int, perPage int) ([]*Submit, error) {
-	submitList := make([]*Submit, 0)
-	err := OrmWeb.Where("user_id=?", userId).Limit(perPage, (currentPage-1)*perPage).Find(&submitList)
->>>>>>> bd277c7ed08a2ecae5ddf41d9ae870e984e38ef2
 	if err != nil {
 		return nil, err
 	}
 	return submitList, nil
 }
 
-<<<<<<< HEAD
+
 //func SubmitGetByUserId(userId int64, currentPage int, perPage int) ([]*Submit, error) {
 //	submitList := make([]*Submit, 0)
 //	err := OrmWeb.Where("user_id=?", userId).Limit(perPage, (currentPage-1)*perPage).Find(&submitList)
@@ -66,8 +60,7 @@ func SubmitGetByUserId(userId int64, currentPage int, perPage int) ([]*Submit, e
 //	return submitList, nil
 //}
 
-=======
->>>>>>> bd277c7ed08a2ecae5ddf41d9ae870e984e38ef2
+
 func SubmitGetByProblemId(problemId int64, currentPage int, perPage int) ([]*Submit, error) {
 	submitList := make([]*Submit, 0)
 	err := OrmWeb.Where("problem_id=?", problemId).Limit(perPage, (currentPage-1)*perPage).Find(&submitList)
